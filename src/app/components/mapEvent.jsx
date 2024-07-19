@@ -1,37 +1,46 @@
+"use client"
+
 import { useMapEvent } from "react-leaflet";
 
 function MapEvent() {
-  useMapEvent("click", (location) => {
-    // map.setView(location.latlng, map.getZoom(), {
-    //   animate: true,
-    // });
+  const map = useMapEvent("click", (location) => {
+     map.setView(location.latlng, map.getZoom(), {
+       animate: true,
+     });    
 
-    // ポップアップ
+
+     /*
+     map.setView(location.latlng, map.getZoom(), {
+       animate: true,
+     });   
+     */
+
+
+    //ポップアップ
     // map.openPopup('<div>popup</div>', location.latlng)
 
     // ツールチップ
     // map.openTooltip('<p>toolTip</p>', location.latlng)
 
-    // ズームイン・ズームアウト
+    //ズームイン・ズームアウト
     // map.zoomIn(1)
     // map.zoomOut(1)
 
-    // 現在の位置情報
+    //現在の位置情報
     // map.locate({
     //     setView: true
     // })
 
-    // 中心
+    //中心
     // console.log(map.getCenter())
 
-    // 境界座標
-    // console.log(map.getBounds())
+    //境界座標
+    //console.log(map.getBounds())
 
-    // マップサイズ
+    //マップサイズ
     // console.log(map.getSize()) 
   });
-
-  return null;
+  
 }
 
 export default MapEvent;
