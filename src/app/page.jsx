@@ -1,20 +1,17 @@
 "use client"
 
-import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import L from 'leaflet';
-import MapEvent from './components/mapEvent';
-//import prefectures from './components/prefectures_const'
-//import onEachFeature from './components/onEachFeature_logic'
-
 import styles from './page.module.css';
 
+const MapComponent = dynamic(() => import('./components/MapComponent'), {
+  ssr: false,
+  loading: () => <p>Map is loading...</p>
+});
 
 const prefectures = [
   { name: "北海道", code: "1" },
-  //{ name: "北方領土", code: "0" }, // 通常、北方領土は公式の都道府県コードには含まれませんが、例示のために"00"としています。
   { name: "青森県", code: "2" },
   { name: "岩手県", code: "3" },
   { name: "宮城県", code: "4" },
@@ -27,7 +24,6 @@ const prefectures = [
   { name: "埼玉県", code: "11" },
   { name: "千葉県", code: "12" },
   { name: "東京都", code: "13" },
-  //{ name: "東京都島嶼", code: "130" }, // 特別なケースとして追加
   { name: "神奈川県", code: "14" },
   { name: "新潟県", code: "15" },
   { name: "富山県", code: "16" },
@@ -64,34 +60,6 @@ const prefectures = [
   { name: "沖縄県", code: "47" }
 ];
 
-
-
-function MapBounds({ geojsonData , prefecture}) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (geojsonData) {
-      /*
-      if(prefecture == 13){
-
-        setCenter([35.5494, 139.5676]);
-        setZoom(8);
-        return;
-      }
-      */
-      const geoJsonLayer = L.geoJSON(geojsonData);
-      const bounds = geoJsonLayer.getBounds();
-      if (bounds.isValid()) { // 確認境界が有効かどうか
-        map.fitBounds(bounds);
-      }
-    }
-  }, [geojsonData, map]);
-
-  return null;
-}
-
-
-
 const onEachFeature = (feature, layer) => {
   const defaultStyle = {
     fillColor: 'green',
@@ -105,9 +73,6 @@ const onEachFeature = (feature, layer) => {
 
   const highlightFeature = (e) => {
     var layer = e.target;
-
-    
-
     layer.setStyle({
       fillColor: 'blue',
       weight: 3,
@@ -124,7 +89,6 @@ const onEachFeature = (feature, layer) => {
     layer.setStyle(defaultStyle);
   };
 
-
   const popupContent = `
     <div>
       <p>${feature.properties.N03_004}</p>
@@ -133,25 +97,18 @@ const onEachFeature = (feature, layer) => {
     </div>
   `;
 
-
-
-  //N03_007→コード
-  //layer.bindPopup (feature.properties.N03_004);
   layer.bindPopup(popupContent);
 
   layer.on('popupopen', (e) => {
-    // ポップアップが開かれたら、ボタンにイベントリスナーを追加
     const button = document.getElementById('showCommentButton');
     if (button) {
       button.addEventListener('click', () => {
         console.log('ボタンがクリックされました！');
-        // ここにボタンクリック時の処理を記述
       });
     }
   });
 
   layer.on('popupclose', (e) => {
-    // ポップアップが閉じられたら、イベントリスナーを削除
     const button = document.getElementById('showCommentButton');
     if (button) {
       button.removeEventListener('click', () => {
@@ -160,25 +117,18 @@ const onEachFeature = (feature, layer) => {
     }
   });
 
-
-
   layer.on({
     mouseover: highlightFeature,
     mouseout: resetHighlight
   });
 };
 
-//const center = [35.3628, 138.7307];
-
-
 function App() {
   const [data, setData] = useState('');
-  const [selectedPrefecture, setSelectedPrefecture] = useState('22'); // 初期値は静岡県
-  const [isLoading, setIsLoading] = useState(false); // ローディング状態を追加
+  const [selectedPrefecture, setSelectedPrefecture] = useState('22');
+  const [isLoading, setIsLoading] = useState(false);
   const [center, setCenter] = useState([35.3628, 138.7307]);
   const [zoom, setZoom] = useState(8);
-  
-
 
   useEffect(() => {
     const loadGeoJSON = async (prefectureCode) => {
@@ -186,67 +136,45 @@ function App() {
       try {
         setData("");
         console.log(prefectureCode);
-
         const response = await axios.get(`./GeoJsons/${prefectureCode}.geojson`);
         if(response) setData(response.data);
-
       } catch (error) {
         console.error('Failed to load geojson:', error);
         setData(null);
       } finally {
-        setIsLoading(false); // データの読み込みが終了または失敗したらローディング状態をfalseに設定
+        setIsLoading(false);
       }
     };
 
     loadGeoJSON(selectedPrefecture);
-
-
   }, [selectedPrefecture]);
 
   const handlePrefectureChange = (event) => {
     setSelectedPrefecture(event.target.value);
   };
 
-
-
-  /*
-  
-35.54936040857786
-lng
-: 
-139.56756591796878
-  */
-
-  
-
   return (
-    
-
     <div>
-
       {isLoading && (
         <div className={styles.loaderOverlay}>
-          <div className={styles.loader}></div> {/* ローディングスピナー */}
+          <div className={styles.loader}></div>
         </div>
       )}
 
       <select value={selectedPrefecture} onChange={handlePrefectureChange}>
-          {prefectures.map((prefecture) => (
-            <option key={prefecture.code} value={prefecture.code}>
-              {prefecture.name}
-            </option>
-          ))}
-        </select>
-      <MapContainer center={center} zoom={zoom} style={{ height: '90vh', width: '100%' }}>
-        <TileLayer
-          attribution='© <a href="https://maps.gsi.go.jp/development/ichiran.html">地理院タイル</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {data && <GeoJSON data={data} onEachFeature={onEachFeature}/>}
-        <MapBounds geojsonData={data} prefecture={selectedPrefecture}/>
-        <MapEvent/>
-      </MapContainer>
-
+        {prefectures.map((prefecture) => (
+          <option key={prefecture.code} value={prefecture.code}>
+            {prefecture.name}
+          </option>
+        ))}
+      </select>
+      
+      <MapComponent 
+        center={center} 
+        zoom={zoom} 
+        data={data} 
+        onEachFeature={onEachFeature}
+      />
     </div>
   );
 }
