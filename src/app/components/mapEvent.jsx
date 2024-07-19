@@ -6,8 +6,6 @@ function MapEvent() {
        animate: true,
      });    
 
-     console.log(location);
-     
 
      /*
      map.setView(location.latlng, map.getZoom(), {

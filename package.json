@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@cloudflare/next-on-pages": "^1.12.1",
     "axios": "^1.6.8",
     "leaflet": "^1.9.4",
     "next": "14.1.4",
